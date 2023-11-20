@@ -1,8 +1,8 @@
 <!doctype html>
-<html>
+<html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>結果</title>
+    <title>meta情報チェックツール：結果画面</title>
     <style>
         table {
             table-layout: fixed;
@@ -56,7 +56,7 @@
 		</th>
         <th>
             headings
-            <small>imgやdisplay:noneの要素は正確に取得できません</small>
+            <small>display:noneの要素も表示されます</small>
         </th>
     </tr>
     <?php
@@ -76,6 +76,21 @@
 
     // 待ち時間の定義（整数秒）
     $interval = 3;
+
+    function getAltText($node) {
+        $altText = "";
+        foreach ($node->childNodes as $child) {
+            if ($child instanceof DOMElement && strtolower($child->tagName) === 'img') {
+                $altText .= $child->getAttribute('alt') . ' ';
+            }
+
+            // If the child has children of its own, recursively collect their alt text
+            if ($child instanceof DOMElement && $child->hasChildNodes()) {
+                $altText .= getAltText($child);
+            }
+        }
+        return $altText;
+    }
 
     // URLを順番に処理
     foreach ($urls as $url) {
@@ -108,8 +123,19 @@
         @$dom->loadHTML($response);
         $title = $dom->getElementsByTagName('title')->item(0)->nodeValue;
 
+
+        $metas = $dom->getElementsByTagName('meta');
+
+        // og titleを取得
+        $ogTitle = null;
+        foreach ($metas as $meta) {
+            if ($meta->getAttribute('property') == 'og:title') {
+                $ogTitle = $meta->getAttribute('content');
+                break;
+            }
+        }
+
         // meta descriptionを取得
-	    $metas = $dom->getElementsByTagName('meta');
 	    $metaDescription = null;
 	    foreach ($metas as $meta) {
 		    if ($meta->getAttribute('name') == 'description') {
@@ -117,6 +143,15 @@
 			    break;
 		    }
 	    }
+
+        // og descriptionを取得
+        $ogDescription = null;
+        foreach ($metas as $meta) {
+            if ($meta->getAttribute('property') == 'og:description') {
+                $ogDescription = $meta->getAttribute('content');
+                break;
+            }
+        }
 
         // og imageのURLを取得
 	    $ogImageUrl = null;
@@ -149,12 +184,22 @@
                 <div>
                     <?php echo $title ?>
                 </div>
+                <?php
+                if ($title != $ogTitle) {
+                    echo "<div style='margin-top: 1em;'>（og:title）<br>" . $ogTitle . "</div>";
+                }
+                ?>
             </td>
-			<td>
-				<div>
-			        <?php echo $metaDescription ?>
-				</div>
-			</td>
+            <td>
+                <div>
+                    <?php echo $metaDescription ?>
+                </div>
+                <?php
+                if ($metaDescription != $ogDescription) {
+                    echo "<div style='margin-top: 1em;'>（og:description）<br>" . $ogDescription . "</div>";
+                }
+                ?>
+            </td>
 			<td>
 				<div>
 					<img src="<?php echo $ogImageUrl ?>" alt=""/>
@@ -171,17 +216,20 @@
 
                     //子孫要素のaltを取得
                     ${$level . "count"}++;
-                    $children = $xpath->query("//*/".$tag."[".${$level . "count"}."]//*/img/@alt");
-                    if($children){
-                        if($children["length"]){
-                            $text = $text . "（以下altテキスト）";
-                        }
-                        foreach ($children as $child){
-                            $text = $text . $child->value;
-                        }
+                    $altText = getAltText($item); // <=== getAltText function is used here
+
+                    if(!empty($altText)){
+                        $text = $text . "（以下altテキスト）" . $altText;
                     }
+
+
                     //見出しレベルによって警告表示する
                     if($prev){
+                        // Resetting the counter here
+                        if($level !== $prev){
+                            ${$prev . "count"} = 0;
+                        }
+
                         //前の見出しより1大きい、もしくは前の見出しと同じか小さいときはOK
                         //それ以外だとNG
                         if($level !== $prev +1 && $level > $prev){

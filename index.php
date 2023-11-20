@@ -1,8 +1,8 @@
 <!doctype html>
-<html>
+<html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>入力</title>
+<title>meta情報チェックツール：入力画面</title>
 <style>
     textarea{
         width: 100%;
@@ -17,11 +17,11 @@
 </style>
 </head>
 <body>
-<p>
-    チェックしたいURLを複数入力（1URLあたり3秒～かかります）
-</p>
 <form action="check.php" method="post">
-    <textarea name="url_from" cols="30" rows="10"></textarea>
+    <label for="url_form">
+        チェックしたいURLを複数入力（1URLあたり3秒～かかります）
+    </label>
+    <textarea id="url_form" name="url_from" cols="30" rows="10"></textarea>
     <button>送信</button>
 </form>
 </body>
