@@ -1,5 +1,5 @@
 # できること
-- 複数のURLの
+- 複数のURLのtitle, description, og:image, 見出し階層を一気に確認する
 ![01.jpg](_doc%2F01.jpg)
 ![02.jpg](_doc%2F02.jpg)
 # 使用方法
