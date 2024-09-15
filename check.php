@@ -25,6 +25,9 @@
         strong.ng{
             color: red;
         }
+        strong.ng::before{
+            content:"★"
+        }
         small{
             font-size: 11px;
             display: block;
